@@ -38,6 +38,7 @@ export function initFirebaseAdmin(): typeof import('firebase-admin') {
       
       // Try to use env variable first, but fall back to file if it's invalid
       let usedEnvVar = false;
+      let parsedServiceAccount: Record<string, unknown> | null = null;
       if (raw) {
         try {
           let jsonString = raw.trim();
@@ -57,8 +58,8 @@ export function initFirebaseAdmin(): typeof import('firebase-admin') {
               }
             }
             
-            const parsed = JSON.parse(jsonString) as Record<string, unknown>;
-            cred = admin.credential.cert(parsed);
+            parsedServiceAccount = JSON.parse(jsonString) as Record<string, unknown>;
+            cred = admin.credential.cert(parsedServiceAccount);
             usedEnvVar = true;
           }
         } catch (parseError: unknown) {
@@ -79,8 +80,8 @@ export function initFirebaseAdmin(): typeof import('firebase-admin') {
             const resolvedPath = path.isAbsolute(filePath) ? filePath : path.join(process.cwd(), filePath);
             
             if (fs.existsSync(resolvedPath)) {
-              const data = JSON.parse(fs.readFileSync(resolvedPath, 'utf8')) as Record<string, unknown>;
-              cred = admin.credential.cert(data);
+              parsedServiceAccount = JSON.parse(fs.readFileSync(resolvedPath, 'utf8')) as Record<string, unknown>;
+              cred = admin.credential.cert(parsedServiceAccount);
               console.log('[Firebase] Using credentials from file:', resolvedPath);
             } else {
               console.warn('[Firebase] Credentials file not found:', resolvedPath);
@@ -100,17 +101,25 @@ export function initFirebaseAdmin(): typeof import('firebase-admin') {
         }
       }
       
+      // Extract project ID from service account JSON if not set as env variable
+      let projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+      if (!projectId && parsedServiceAccount && typeof parsedServiceAccount.project_id === 'string') {
+        projectId = parsedServiceAccount.project_id;
+        console.log('[Firebase] Extracted project_id from service account JSON:', projectId);
+      }
+      
       try {
-        const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
         if (!projectId) {
-          console.warn('[Firebase] FIREBASE_PROJECT_ID not set. Firebase may not work correctly.');
+          const errorMsg = 'FIREBASE_PROJECT_ID not set and could not be extracted from service account JSON. Please set FIREBASE_PROJECT_ID environment variable.';
+          console.error('[Firebase]', errorMsg);
+          throw new Error(errorMsg);
         }
         
         admin.initializeApp({
           credential: cred,
           projectId: projectId,
         });
-        console.log('[Firebase] Successfully initialized with project:', projectId || 'default');
+        console.log('[Firebase] Successfully initialized with project:', projectId);
       } catch (initError: unknown) {
         const errorMessage = initError instanceof Error ? initError.message : 'Unknown error';
         const errorStack = initError instanceof Error ? initError.stack : undefined;
