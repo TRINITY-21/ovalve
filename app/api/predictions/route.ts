@@ -117,20 +117,31 @@ export async function GET(req: NextRequest) {
   try {
     let admin;
     try {
+      // Check if Firebase credentials are available
+      const hasEnvVar = !!(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.FIREBASE_SERVICE_ACCOUNT_FILE || process.env.GOOGLE_APPLICATION_CREDENTIALS);
+      console.log('[Predictions API] Checking Firebase credentials...', {
+        hasEnvVar,
+        hasServiceAccountJson: !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
+        hasServiceAccountFile: !!process.env.FIREBASE_SERVICE_ACCOUNT_FILE,
+        hasGoogleAppCreds: !!process.env.GOOGLE_APPLICATION_CREDENTIALS,
+        projectId: process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'not set'
+      });
+      
       admin = initFirebaseAdmin();
       console.log('[Predictions API] Firebase Admin initialized successfully');
     } catch (initError: unknown) {
       const errorMessage = initError instanceof Error ? initError.message : 'Unknown error';
       console.error('[Predictions API] Firebase initialization error:', errorMessage);
       console.error('[Predictions API] Stack:', initError instanceof Error ? initError.stack : 'No stack');
-      // Return error details in development, empty array in production
-      if (process.env.NODE_ENV === 'development') {
-        return NextResponse.json({ 
-          error: 'Firebase initialization failed', 
-          details: errorMessage 
-        }, { status: 500 });
-      }
-      return NextResponse.json([]);
+      
+      // Always return error response so frontend can handle it properly
+      // In production, don't expose full error details for security
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      return NextResponse.json({ 
+        error: 'Firebase initialization failed', 
+        details: isDevelopment ? errorMessage : 'Please check Firebase configuration',
+        message: 'Unable to connect to Firebase. Please verify your credentials are set correctly in Vercel environment variables.'
+      }, { status: 500 });
     }
     
     const url = new URL(req.url);

@@ -12,7 +12,8 @@ export function initFirebaseAdmin(): typeof import('firebase-admin') {
     if (!admin.apps || admin.apps.length === 0) {
       // Initialize with default credentials as fallback
       let cred: ReturnType<typeof admin.credential.cert> | ReturnType<typeof admin.credential.applicationDefault> = admin.credential.applicationDefault();
-      const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.NEXT_PUBLIC_FIREBASE_SERVICE_ACCOUNT_JSON;
+      // Note: Do NOT use NEXT_PUBLIC_ prefix for Firebase credentials - they are server-side only!
+      const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
       let filePath = process.env.FIREBASE_SERVICE_ACCOUNT_FILE || process.env.GOOGLE_APPLICATION_CREDENTIALS;
       
       // If no file path specified, try to find common service account file names
@@ -100,12 +101,23 @@ export function initFirebaseAdmin(): typeof import('firebase-admin') {
       }
       
       try {
+        const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+        if (!projectId) {
+          console.warn('[Firebase] FIREBASE_PROJECT_ID not set. Firebase may not work correctly.');
+        }
+        
         admin.initializeApp({
           credential: cred,
-          projectId: process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+          projectId: projectId,
         });
+        console.log('[Firebase] Successfully initialized with project:', projectId || 'default');
       } catch (initError: unknown) {
         const errorMessage = initError instanceof Error ? initError.message : 'Unknown error';
+        const errorStack = initError instanceof Error ? initError.stack : undefined;
+        console.error('[Firebase] Initialization error:', errorMessage);
+        if (errorStack) {
+          console.error('[Firebase] Stack trace:', errorStack);
+        }
         throw new Error(`Firebase initialization failed: ${errorMessage}`);
       }
     }

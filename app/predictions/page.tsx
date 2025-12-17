@@ -112,7 +112,8 @@ export default function PredictionsPage() {
         const response = await fetch('/api/predictions', { cache: 'no-store' });
         
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || errorData.error || `HTTP ${response.status}: ${response.statusText}`);
         }
         
         const data = await response.json();
@@ -120,6 +121,10 @@ export default function PredictionsPage() {
         if (!cancelled) {
           if (data.error) {
             console.error('Error fetching predictions:', data.error, data.details);
+            // Show error message to user
+            if (data.message) {
+              console.error('Firebase Error:', data.message);
+            }
             setPredictions([]);
           } else if (Array.isArray(data)) {
             // Transform API data to Prediction format
