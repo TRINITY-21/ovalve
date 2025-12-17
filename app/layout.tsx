@@ -33,26 +33,40 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const gaTrackingId = process.env.NEXT_PUBLIC_GA_TRACKING_ID || 'G-8ZS3H6BW5N';
-  
+
   return (
     <html lang="en">
       <head>
         {/* Google tag (gtag.js) */}
-        {gaTrackingId && (
-          <>
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaTrackingId}`} />
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                  window.dataLayer = window.dataLayer || [];
-                  function gtag(){dataLayer.push(arguments);}
-                  gtag('js', new Date());
-                  gtag('config', '${gaTrackingId}');
-                `,
-              }}
-            />
-          </>
-        )}
+
+        <>
+          {/* PWA Manifest */}
+          <link rel="manifest" href="/manifest.json" />
+          <meta name="theme-color" content="#009866" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <meta name="apple-mobile-web-app-title" content="OVALVE - Live Sports Streaming" />
+          <link rel="apple-touch-icon" href="/ovalve.png" />
+          {/* Google tag (gtag.js) */}
+          <script async src="https://www.googletagmanager.com/gtag/js?id=G-8ZS3H6BW5N" />
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-8ZS3H6BW5N');
+            `,
+            }}
+          />
+          {/* Google AdSense */}
+          <script
+            async
+            src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7225325372988376"
+            crossOrigin="anonymous"
+          />
+        </>
+
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
