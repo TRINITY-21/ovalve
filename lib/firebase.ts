@@ -10,7 +10,8 @@ export function initFirebaseAdmin(): typeof import('firebase-admin') {
   
   if (!initialized) {
     if (!admin.apps || admin.apps.length === 0) {
-      let cred: ReturnType<typeof admin.credential.cert> | ReturnType<typeof admin.credential.applicationDefault>;
+      // Initialize with default credentials as fallback
+      let cred: ReturnType<typeof admin.credential.cert> | ReturnType<typeof admin.credential.applicationDefault> = admin.credential.applicationDefault();
       const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.NEXT_PUBLIC_FIREBASE_SERVICE_ACCOUNT_JSON;
       let filePath = process.env.FIREBASE_SERVICE_ACCOUNT_FILE || process.env.GOOGLE_APPLICATION_CREDENTIALS;
       

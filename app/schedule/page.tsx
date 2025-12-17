@@ -2,14 +2,14 @@
 
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import LoadingSpinner from '../components/LoadingSpinner';
 import MatchCard from '../components/MatchCard';
 import SportSelector from '../components/SportSelector';
 import { useDarkMode } from '../contexts/DarkModeContext';
 import { useScheduleMatches } from '../hooks/useScheduleMatches';
 
-export default function SchedulePage() {
+function SchedulePageContent() {
   const { darkMode } = useDarkMode();
   const router = useRouter();
   const pathname = usePathname();
@@ -332,6 +332,23 @@ export default function SchedulePage() {
         )}
       </div>
     </div>
+  );
+}
+
+function SchedulePageFallback() {
+  const { darkMode } = useDarkMode();
+  return (
+    <div className="p-2 sm:p-4 md:p-8 max-w-[2400px] mx-auto">
+      <LoadingSpinner darkMode={darkMode} />
+    </div>
+  );
+}
+
+export default function SchedulePage() {
+  return (
+    <Suspense fallback={<SchedulePageFallback />}>
+      <SchedulePageContent />
+    </Suspense>
   );
 }
 
