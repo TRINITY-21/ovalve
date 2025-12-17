@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import MainLayout from "./components/MainLayout";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,8 +32,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaTrackingId = process.env.NEXT_PUBLIC_GA_TRACKING_ID || 'G-8ZS3H6BW5N';
+  
   return (
     <html lang="en">
+      <head>
+        {/* Google tag (gtag.js) */}
+        {gaTrackingId && (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaTrackingId}`} />
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${gaTrackingId}');
+                `,
+              }}
+            />
+          </>
+        )}
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
