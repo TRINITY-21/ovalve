@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# StreamDeck - Live Sports Streaming Platform
+
+A modern, responsive Next.js application for streaming live sports matches, watching highlights, and getting expert predictions.
+
+## Features
+
+- 🏆 **Live Matches**: Watch live sports streams with multiple source options
+- 🔥 **Popular Now**: Browse trending matches with high viewership
+- 📅 **Schedule**: View upcoming fixtures and match times
+- 🏅 **Leagues**: Browse matches by competition
+- 🎬 **Highlights**: Watch match highlights and replays
+- 📊 **Predictions**: Get daily football tips with AI-powered predictions
+- 💬 **Live Chat**: Real-time chat during matches
+- 🌙 **Dark Mode**: Beautiful dark/light theme toggle
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **State Management**: React Context API
+
+## Project Structure
+
+```
+app/
+├── components/          # Reusable components
+│   ├── Header.tsx       # Top navigation bar
+│   ├── Sidebar.tsx      # Side navigation
+│   ├── MatchCard.tsx    # Match card component
+│   ├── LoadingSpinner.tsx
+│   ├── MainLayout.tsx   # Main layout wrapper
+│   ├── SidebarItem.tsx
+│   └── SportSelector.tsx
+├── contexts/            # React contexts
+│   └── DarkModeContext.tsx
+├── data/                # Mock data and constants
+│   └── constants.ts
+├── page.tsx             # Dashboard/Home page
+├── popular/             # Popular matches page
+├── schedule/            # Schedule page
+├── leagues/             # Leagues page
+├── highlights/          # Highlights page
+├── predictions/         # Predictions page
+└── watch/[id]/          # Watch match page (dynamic route)
+```
 
 ## Getting Started
 
-First, run the development server:
-
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Run the development server:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Pages
 
-## Learn More
+- `/` - Dashboard with live matches
+- `/popular` - Popular/trending matches
+- `/schedule` - Match schedule
+- `/leagues` - Browse by league
+- `/highlights` - Match highlights
+- `/predictions` - Daily predictions
+- `/watch/[id]` - Watch a specific match
 
-To learn more about Next.js, take a look at the following resources:
+## Components
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Reusable Components
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **MatchCard**: Displays match information with team logos and status
+- **Sidebar**: Navigation sidebar with collapsible functionality
+- **Header**: Top bar with search and dark mode toggle
+- **LoadingSpinner**: Animated loading indicator
+- **SportSelector**: Sport type selector (Football, Basketball, etc.)
 
-## Deploy on Vercel
+## Responsive Design
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The application is fully responsive and works on:
+- Mobile devices (320px+)
+- Tablets (768px+)
+- Desktop (1024px+)
+- Large screens (1800px+)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Features in Detail
+
+### Live Streaming
+- Multiple stream source options
+- Live chat integration
+- Related matches sidebar
+- Video player controls
+
+### Predictions
+- Daily match predictions
+- Win/loss tracking
+- Confidence scores
+- Multiple data sources (AI, Experts, Community)
+
+### Highlights
+- Featured highlights
+- YouTube integration
+- Related videos
+- Video metadata
+
+## Development
+
+The project uses:
+- TypeScript for type safety
+- Tailwind CSS for styling
+- Next.js App Router for routing
+- React Server Components where possible
+- Client Components for interactivity
+
+## License
+
+MIT
+# ovalve
