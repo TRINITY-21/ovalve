@@ -24,3 +24,570 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Custom Scrollbar Styles */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+  background-clip: padding-box;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 2s linear infinite;
+}
+
+.category-pill {
+  opacity: 0;
+  transform: translateY(6px);
+  animation: pillEntrance 0.35s ease forwards;
+}
+
+.category-pill-active {
+  animation: pillEntrance 0.35s ease forwards;
+}
+
+.category-control-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.category-control-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.category-control-btn:active {
+  transform: scale(0.94);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.category-control-btn:active::after {
+  opacity: 1;
+}
+
+@keyframes pillEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sheetRise {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.bottom-sheet {
+  animation: sheetRise 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Theater Mode Slide-Over Animation */
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in-from-bottom-full {
+  animation: slideInFromBottom 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Professional Theater Mode Animations - Style 1: Slide + Scale + Blur */
+@keyframes theaterModeEnter {
+  0% {
+    transform: translateY(100%) scale(0.96) translateZ(0);
+    opacity: 0;
+    filter: blur(12px);
+  }
+  40% {
+    transform: translateY(15%) scale(0.98) translateZ(0);
+    opacity: 0.8;
+    filter: blur(6px);
+  }
+  70% {
+    transform: translateY(-2%) scale(1.01) translateZ(0);
+    opacity: 0.95;
+    filter: blur(2px);
+  }
+  100% {
+    transform: translateY(0) scale(1) translateZ(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes theaterModeExit {
+  0% {
+    transform: translateY(0) scale(1) translateZ(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  30% {
+    transform: translateY(5%) scale(0.99) translateZ(0);
+    opacity: 0.9;
+    filter: blur(2px);
+  }
+  70% {
+    transform: translateY(30%) scale(0.97) translateZ(0);
+    opacity: 0.6;
+    filter: blur(6px);
+  }
+  100% {
+    transform: translateY(100%) scale(0.95) translateZ(0);
+    opacity: 0;
+    filter: blur(12px);
+  }
+}
+
+/* Alternative Theater Mode Animations - Style 2: Fade + Scale from Center with Rotation */
+@keyframes theaterModeEnterAlt {
+  0% {
+    transform: scale(0.85) translateY(20px) rotateX(15deg) translateZ(0);
+    opacity: 0;
+    filter: blur(8px);
+  }
+  50% {
+    transform: scale(1.02) translateY(-5px) rotateX(-2deg) translateZ(0);
+    opacity: 0.9;
+    filter: blur(3px);
+  }
+  100% {
+    transform: scale(1) translateY(0) rotateX(0deg) translateZ(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes theaterModeExitAlt {
+  0% {
+    transform: scale(1) translateY(0) rotateX(0deg) translateZ(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+  50% {
+    transform: scale(0.95) translateY(10px) rotateX(8deg) translateZ(0);
+    opacity: 0.7;
+    filter: blur(4px);
+  }
+  100% {
+    transform: scale(0.85) translateY(30px) rotateX(15deg) translateZ(0);
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+
+.theater-mode-panel {
+  animation-fill-mode: both;
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.theater-mode-enter {
+  animation: theaterModeEnter 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.theater-mode-exit {
+  animation: theaterModeExit 0.45s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+/* Alternative style class */
+.theater-mode-enter-alt {
+  animation: theaterModeEnterAlt 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.theater-mode-exit-alt {
+  animation: theaterModeExitAlt 0.4s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.3;
+    box-shadow: 0_0_60px_rgba(16,185,129,0.3),0_20px_60px_-20px_rgba(15,118,110,0.8);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0_0_80px_rgba(16,185,129,0.5),0_20px_80px_-20px_rgba(15,118,110,1);
+  }
+}
+
+.featured-match-glow {
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+/* Mobile touch optimizations */
+@media (max-width: 640px) {
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Streaming platform specific animations */
+@keyframes livePulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+.live-indicator {
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+/* Smooth scroll for carousels */
+.scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Watch button hover effect */
+.watch-button-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.watch-button-hover:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+.watch-button-hover:active {
+  transform: scale(0.95);
+}
+
+/* Quality badge animation */
+@keyframes qualityShimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.quality-badge {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: qualityShimmer 3s linear infinite;
+}
+
+/* Viewer count pulse */
+@keyframes viewerPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.viewer-count {
+  animation: viewerPulse 3s ease-in-out infinite;
+}
+
+/* Hourglass sand flow animation */
+@keyframes sandFlow {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.hourglass-container {
+  width: 48px;
+  height: 48px;
+  position: relative;
+}
+
+.hourglass-sand-flow {
+  position: absolute;
+  width: 3px;
+  height: 20px;
+  background: linear-gradient(to bottom, 
+    rgba(148, 163, 184, 0.8) 0%,
+    rgba(148, 163, 184, 0.6) 50%,
+    rgba(148, 163, 184, 0.4) 100%
+  );
+  border-radius: 2px;
+  top: 30%;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: sandFlow 2s ease-in-out infinite;
+}
+
+.hourglass-sand-flow::before,
+.hourglass-sand-flow::after {
+  content: '';
+  position: absolute;
+  width: 2px;
+  height: 15px;
+  background: linear-gradient(to bottom, 
+    rgba(148, 163, 184, 0.6) 0%,
+    rgba(148, 163, 184, 0.3) 100%
+  );
+  border-radius: 1px;
+  animation: sandFlow 2s ease-in-out infinite;
+}
+
+.hourglass-sand-flow::before {
+  left: -6px;
+  animation-delay: 0.3s;
+}
+
+.hourglass-sand-flow::after {
+  right: -6px;
+  animation-delay: 0.6s;
+}
+
+/* Smooth sidebar collapse transition on all screen sizes */
+.sidebar-collapse-transition {
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+
+/* Video element styling */
+video {
+  background: #000;
+}
+
+/* Ensure native video controls are visible */
+video::-webkit-media-controls-panel {
+  background-image: linear-gradient(transparent, rgba(0, 0, 0, 0.7)) !important;
+}
+
+video::-webkit-media-controls-play-button,
+video::-webkit-media-controls-pause-button {
+  display: inline-block !important;
+}
+
+video::-webkit-media-controls-timeline {
+  display: inline-block !important;
+}
+
+video::-webkit-media-controls-volume-slider {
+  display: inline-block !important;
+}
+
+
+
+/* Video Player Aspect Ratio Fix for 1024px Screens */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  /* Allow the main container to expand beyond viewport height */
+  .watch-page-main-container {
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  /* Allow the video container to expand to natural 16:9 height */
+  .watch-page-main-container > div:first-child {
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  /* Ensure video container maintains proper 16:9 aspect ratio */
+  .watch-page-main-container .aspect-video {
+    aspect-ratio: 16 / 9 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+  
+  /* Ensure video element fills container properly */
+  .watch-page-main-container .aspect-video video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover;
+  }
+
+  /* Theater Mode - Make everything smaller on 1024px screens */
+  .theater-mode-top-bar {
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .theater-mode-button {
+    padding: 0.375rem 0.625rem !important;
+    font-size: 0.625rem !important;
+    gap: 0.375rem !important;
+  }
+
+  .theater-mode-button svg {
+    width: 0.75rem !important;
+    height: 0.75rem !important;
+  }
+
+  .theater-mode-teams {
+    gap: 0.5rem !important;
+  }
+
+  .theater-mode-logo {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    padding: 0.125rem !important;
+  }
+
+  .theater-mode-league {
+    font-size: 0.5rem !important;
+    line-height: 1 !important;
+  }
+
+  .theater-mode-team-name {
+    font-size: 0.625rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .theater-mode-live {
+    padding: 0.25rem 0.5rem !important;
+    gap: 0.25rem !important;
+  }
+
+  .theater-mode-live span:first-child {
+    width: 0.375rem !important;
+    height: 0.375rem !important;
+  }
+
+  .theater-mode-live-text {
+    font-size: 0.5rem !important;
+  }
+
+  .theater-mode-vs {
+    font-size: 0.5rem !important;
+  }
+}
+
+/* Chat Sidebar Fix for Large Screens (xl and above) */
+@media (min-width: 1280px) {
+  .watch-page-main-container {
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+  
+  .chat-sidebar-large {
+    height: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    align-self: stretch !important;
+  }
+  
+  .chat-sidebar-large > div:last-child {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+  }
+  
+  .chat-sidebar-large .flex-1.flex.flex-col {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  
+  .chat-sidebar-large form {
+    flex-shrink: 0 !important;
+  }
+}
+
+
