@@ -1,16 +1,18 @@
 'use client';
 
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import MatchCard from '@/app/components/MatchCard';
 import { useDarkMode } from '@/app/contexts/DarkModeContext';
 import { useSidebar } from '@/app/contexts/SidebarContext';
+import { usePopularMatches } from '@/app/hooks/usePopularMatches';
 import { getMatches, getStreams } from '@/app/services/streamedApi';
 import type { APIMatch, APIStream } from '@/app/types/streamed';
 import type { Match } from '@/app/utils/matchTransform';
 import { transformMatches } from '@/app/utils/matchTransform';
-import { ArrowRight, Check, ChevronDown, Maximize2, MessageSquare, Minimize2, Play, Radio, Send, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Flame, Maximize2, MessageSquare, Minimize2, Play, Radio, X } from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 // Map source names to LLM names
 const SOURCE_TO_LLM: Record<string, string> = {
@@ -33,7 +35,7 @@ function generateUniqueStreamId(): string {
 
 export default function WatchPage() {
   const { darkMode } = useDarkMode();
-  const { setAutoCollapseOnWatch } = useSidebar();
+  const { setAutoCollapseOnWatch, isCollapsed } = useSidebar();
   const params = useParams();
   const router = useRouter();
   const matchId = params.id as string;
@@ -52,10 +54,25 @@ export default function WatchPage() {
   const [theaterMode, setTheaterMode] = useState(false);
   const [isTheaterStreamMenuOpen, setIsTheaterStreamMenuOpen] = useState(false);
   const [isTheaterModeExiting, setIsTheaterModeExiting] = useState(false);
-  const [chatMessage, setChatMessage] = useState('');
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, user: 'SoccerFan99', text: 'Kickoff! Lets go!', time: '00:00', avatarColor: 'bg-blue-500' },
-  ]);
+  // Chat state - commented out for now
+  // const [chatMessage, setChatMessage] = useState('');
+  // const [chatMessages, setChatMessages] = useState([
+  //   { id: 1, user: 'SoccerFan99', text: 'Kickoff! Lets go!', time: '00:00', avatarColor: 'bg-blue-500' },
+  // ]);
+  
+  // Popular matches for sidebar
+  const { matches: popularMatchesData, isLoading: popularMatchesLoading } = usePopularMatches();
+  
+  // Filter popular matches - show live and upcoming popular matches, exclude current match
+  const popularMatches = useMemo(() => {
+    return popularMatchesData
+      .filter(m => {
+        // Exclude current match
+        if (m.id === matchId || m.id === match?.id) return false;
+        // Only show popular matches that are live or upcoming
+        return m.isHot && (m.status === 'live' || m.status === 'upcoming');
+      });
+  }, [popularMatchesData, matchId, match?.id]);
   const [timeRemaining, setTimeRemaining] = useState<{ hours: number; minutes: number; seconds: number } | null>(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [videoTime, setVideoTime] = useState(0);
@@ -81,11 +98,12 @@ export default function WatchPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [chatMessages]);
+  // Chat scroll effect - commented out
+  // useEffect(() => {
+  //   if (chatEndRef.current) {
+  //     chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+  //   }
+  // }, [chatMessages]);
 
   // Prevent body scroll when theater mode is open
   useEffect(() => {
@@ -399,22 +417,23 @@ export default function WatchPage() {
     );
   }
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatMessage.trim()) return;
-    
-    const newMessage = {
-      id: chatMessages.length + 1,
-      user: 'You',
-      text: chatMessage,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      avatarColor: 'bg-indigo-600',
-      isMe: true
-    };
-    
-    setChatMessages([...chatMessages, newMessage]);
-    setChatMessage('');
-  };
+  // Chat handler - commented out
+  // const handleSendMessage = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!chatMessage.trim()) return;
+  //   
+  //   const newMessage = {
+  //     id: chatMessages.length + 1,
+  //     user: 'You',
+  //     text: chatMessage,
+  //     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  //     avatarColor: 'bg-indigo-600',
+  //     isMe: true
+  //   };
+  //   
+  //   setChatMessages([...chatMessages, newMessage]);
+  //   setChatMessage('');
+  // };
 
   return (
     <div className={`flex flex-col h-full animate-in fade-in duration-500 ${darkMode ? 'bg-slate-950' : 'bg-slate-50'} relative`}>
@@ -556,6 +575,90 @@ export default function WatchPage() {
                           setStreamSwitching(false);
                         }}
                       />
+                      {/* Available Streams Hover Overlay */}
+                      {match.status !== 'upcoming' && streams.length > 0 && (
+                        <div className="absolute top-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="relative flex items-center gap-2" ref={sourceMenuRef}>
+                            <span className={`text-xs sm:text-sm font-medium ${darkMode ? 'text-white' : 'text-slate-900'} backdrop-blur-md px-2 py-1 rounded ${darkMode ? 'bg-slate-900/80' : 'bg-white/80'}`}>
+                              Available streams
+                            </span>
+                            <button
+                              onClick={() => setIsSourceMenuOpen(!isSourceMenuOpen)}
+                              className={`flex items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-lg border transition-all text-xs sm:text-sm font-medium shadow-lg backdrop-blur-md ${
+                                darkMode
+                                  ? 'bg-slate-900/90 border-white/20 text-slate-200 hover:bg-slate-800/90 hover:border-emerald-500/40'
+                                  : 'bg-white/95 border-slate-200 text-slate-700 hover:bg-white hover:border-emerald-300'
+                              }`}
+                            >
+                              <Radio size={14} className="sm:w-4 sm:h-4" />
+                              <span className="text-xs sm:text-sm">
+                                {streamSource ? ((streamSource as any).llmName || streamSource.source) : 'Loading...'}
+                              </span>
+                              <ChevronDown size={14} className={`sm:w-4 sm:h-4 transition-transform duration-200 ${isSourceMenuOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isSourceMenuOpen && (
+                              <>
+                                <div className="fixed inset-0 z-40" onClick={() => setIsSourceMenuOpen(false)} />
+                                <div className={`absolute right-0 mt-2 w-56 sm:w-64 rounded-xl border shadow-2xl z-50 overflow-hidden backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200 ${
+                                  darkMode
+                                    ? 'bg-slate-900/98 border-white/15 shadow-black/50'
+                                    : 'bg-white/98 border-slate-200 shadow-slate-300/50'
+                                }`}>
+                                  <div className="p-1.5 sm:p-2">
+                                    <div className={`px-2 sm:px-3 py-1 sm:py-2 mb-0.5 sm:mb-1 text-[10px] sm:text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                                      Stream Quality
+                                    </div>
+                                    {streamsLoading ? (
+                                      <div className="flex items-center justify-center py-4">
+                                        <LoadingSpinner darkMode={darkMode} compact={true} />
+                                      </div>
+                                    ) : streams.length > 0 ? (
+                                      streams.map((stream) => {
+                                        const streamWithExtras = stream as APIStream & { uniqueId: string; llmName: string };
+                                        const streamUniqueId = streamWithExtras.uniqueId;
+                                        const currentUniqueId = streamSource ? (streamSource as any).uniqueId : null;
+                                        const isSelected = currentUniqueId === streamUniqueId;
+                                        
+                                        return (
+                                          <button
+                                            key={streamUniqueId}
+                                            onClick={() => {
+                                              setStreamSwitching(true);
+                                              setIframeLoaded(false);
+                                              setStreamSource(stream);
+                                              setIsSourceMenuOpen(false);
+                                            }}
+                                            className={`w-full flex items-center gap-2 sm:gap-3 px-2 sm:px-3 py-1.5 sm:py-2.5 rounded-lg transition-all text-xs sm:text-sm font-medium text-left ${
+                                              isSelected
+                                                ? (darkMode
+                                                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shadow-sm'
+                                                    : 'bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm')
+                                                : (darkMode
+                                                    ? 'text-slate-300 hover:bg-white/5 hover:text-white'
+                                                    : 'text-slate-700 hover:bg-slate-50')
+                                            }`}
+                                          >
+                                            <Radio size={12} className={`sm:w-[14px] sm:h-[14px] ${isSelected ? 'opacity-100' : 'opacity-50'}`} />
+                                            <span className="flex-1">
+                                              {streamWithExtras.llmName} - {stream.language} {stream.hd ? 'HD' : 'SD'}
+                                            </span>
+                                            {isSelected && <Check size={14} className="sm:w-4 sm:h-4 text-emerald-500" />}
+                                          </button>
+                                        );
+                                      })
+                                    ) : (
+                                      <div className={`px-2 sm:px-3 py-4 text-center text-xs sm:text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        No streams available
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className={`w-full h-full flex items-center justify-center ${darkMode ? 'text-white' : 'text-slate-300'}`}>
@@ -805,97 +908,87 @@ export default function WatchPage() {
               )}
             </div>
 
-          {/* Chat section - appears below Available Streams on 1024px and below */}
-            <div className={`flex flex-col border overflow-hidden transition-all duration-500 ease-in-out mt-3 sm:mt-6 rounded-2xl shadow-xl xl:hidden ${darkMode ? 'bg-slate-900/60 border-white/15 shadow-black/30' : 'bg-white border-slate-200 shadow-slate-300/50'}`}>
-              <div className={`p-3 sm:p-4 border-b font-bold text-xs sm:text-sm flex items-center justify-between rounded-t-2xl shadow-sm ${darkMode ? 'border-white/15 text-white bg-gradient-to-r from-slate-900/90 to-slate-800/90' : 'border-slate-200 text-slate-900 bg-gradient-to-r from-slate-50 to-white'}`}>
-                <div className="flex items-center gap-2 sm:gap-2.5">
-                  <div className="p-1 sm:p-1.5 rounded-lg bg-emerald-500/10">
-                    <MessageSquare size={14} className="sm:w-4 sm:h-4 text-emerald-500" /> 
-                  </div>
-                  <span>Live Chat</span>
+          {/* Popular Matches section - appears below Available Streams on 1024px and below */}
+          {/* Chat section - commented out for now */}
+          {/* <div className={`flex flex-col border overflow-hidden transition-all duration-500 ease-in-out mt-3 sm:mt-6 rounded-2xl shadow-xl xl:hidden ${darkMode ? 'bg-slate-900/60 border-white/15 shadow-black/30' : 'bg-white border-slate-200 shadow-slate-300/50'}`}>
+            ... chat code ...
+          </div> */}
+          
+          <div className={`flex flex-col border overflow-hidden transition-all duration-500 ease-in-out mt-3 sm:mt-6 rounded-2xl shadow-xl xl:hidden ${darkMode ? 'bg-slate-900/60 border-white/15 shadow-black/30' : 'bg-white border-slate-200 shadow-slate-300/50'}`}>
+            <div className={`p-3 sm:p-4 border-b font-bold text-xs sm:text-sm flex items-center justify-between rounded-t-2xl shadow-sm ${darkMode ? 'border-white/15 text-white bg-gradient-to-r from-slate-900/90 to-slate-800/90' : 'border-slate-200 text-slate-900 bg-gradient-to-r from-slate-50 to-white'}`}>
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <div className="p-1 sm:p-1.5 rounded-lg bg-emerald-500/10">
+                  <Flame size={14} className="sm:w-4 sm:h-4 text-emerald-500" /> 
                 </div>
-                <span className={`text-[9px] sm:text-[10px] font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full ${darkMode ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' : 'text-emerald-600 bg-emerald-50 border border-emerald-200'}`}>Top Chat</span>
+                <span>Popular Now</span>
               </div>
-              <div className="flex flex-col max-h-[600px]">
-                <div className="flex-1 p-3 sm:p-4 space-y-2 sm:space-y-4 overflow-y-auto custom-scrollbar min-h-[300px] pb-3 sm:pb-4">
-                  {chatMessages.map(msg => (
-                    <div key={msg.id} className={`flex gap-2 sm:gap-3 ${(msg as any).isMe ? 'flex-row-reverse' : ''} group animate-in fade-in duration-200`}>
-                      <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full shrink-0 flex items-center justify-center text-[10px] sm:text-xs font-bold text-white shadow-md ring-2 ring-white/20 ${msg.avatarColor}`}>
-                        {msg.user[0]}
-                      </div>
-                      <div className={`flex flex-col ${(msg as any).isMe ? 'items-end' : 'items-start'}`}>
-                        <div className="flex items-baseline gap-1.5 sm:gap-2 mb-1 sm:mb-1.5">
-                          <span className={`text-[10px] sm:text-xs font-bold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{msg.user}</span>
-                          <span className={`text-[9px] sm:text-[10px] opacity-0 group-hover:opacity-100 transition-opacity ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>{msg.time}</span>
-                        </div>
-                        <div className={`px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl text-xs sm:text-sm max-w-[85%] shadow-sm leading-relaxed transition-all ${(msg as any).isMe ? 'bg-emerald-600 text-white rounded-tr-sm hover:bg-emerald-500' : (darkMode ? 'bg-slate-800 text-slate-200 rounded-tl-sm hover:bg-slate-700' : 'bg-slate-100 text-slate-800 rounded-tl-sm hover:bg-slate-200')}`}>
-                          {msg.text}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  <div ref={chatEndRef} />
-                </div>
-                <form onSubmit={handleSendMessage} className={`p-3 sm:p-4 border-t flex items-center gap-2 sm:gap-2.5 rounded-b-2xl ${darkMode ? 'border-white/15 bg-slate-900/70' : 'border-slate-200 bg-slate-50'}`}>
-                  <input
-                    type="text"
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    className={`flex-1 px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl border text-xs sm:text-sm outline-none transition-all focus:ring-2 focus:ring-emerald-500/30 shadow-sm ${darkMode ? 'bg-slate-900 border-white/15 text-white placeholder:text-slate-400 focus:border-emerald-500/40' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500'}`}
-                  />
-                  <button type="submit" className="flex items-center justify-center p-2 sm:p-2.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 shadow-md hover:shadow-lg shadow-emerald-500/30 aspect-square">
-                    <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
-                  </button>
-                </form>
-              </div>
+              {popularMatches.length > 0 && (
+                <span className={`text-[9px] sm:text-[10px] font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full ${darkMode ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' : 'text-emerald-600 bg-emerald-50 border border-emerald-200'}`}>
+                  {popularMatches.length} {popularMatches.length === 1 ? 'Match' : 'Matches'}
+                </span>
+              )}
             </div>
+            <div className="flex flex-col max-h-[600px] overflow-y-auto custom-scrollbar">
+              {popularMatchesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner darkMode={darkMode} compact={true} />
+                </div>
+              ) : popularMatches.length > 0 ? (
+                <div className={`p-3 sm:p-4 grid grid-cols-1 gap-3 sm:gap-4 ${!isCollapsed ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
+                  {popularMatches.map(match => (
+                    <MatchCard key={match.id} match={match} compact={true} darkMode={darkMode} />
+                  ))}
+                </div>
+              ) : (
+                <div className={`flex flex-col items-center justify-center py-8 px-4 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <Flame size={24} className="mb-2 opacity-50" />
+                  <p className="text-xs sm:text-sm text-center">No popular matches available</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Spacer to ensure chat is fully visible when scrolling */}
+        {/* Spacer to ensure popular matches are fully visible when scrolling */}
         <div className="pb-6 xl:hidden" />
 
-        {/* Chat section - appears on the right side on screens larger than 1024px (xl and above) */}
-        <div className={`hidden xl:flex flex-col border-t lg:border-t-0 lg:border-l overflow-hidden transition-all duration-500 ease-in-out chat-sidebar-large h-full shadow-lg ${darkMode ? 'bg-slate-900/50 border-white/10 shadow-black/30' : 'bg-white border-slate-200 shadow-slate-200/50'} opacity-100 translate-x-0 w-full lg:w-[380px] pointer-events-auto`}>
+        {/* Popular Matches section - appears on the right side on screens larger than 1024px (xl and above) */}
+        {/* Chat section - commented out for now */}
+        {/* <div className={`hidden xl:flex flex-col border-t lg:border-t-0 lg:border-l overflow-hidden transition-all duration-500 ease-in-out chat-sidebar-large h-full shadow-lg ${darkMode ? 'bg-slate-900/50 border-white/10 shadow-black/30' : 'bg-white border-slate-200 shadow-slate-200/50'} opacity-100 translate-x-0 w-full lg:w-[380px] pointer-events-auto`}>
+          ... chat code ...
+        </div> */}
+        
+        <div className={`hidden xl:flex flex-col border-t lg:border-t-0 lg:border-l overflow-hidden transition-all duration-500 ease-in-out chat-sidebar-large h-full shadow-lg ${darkMode ? 'bg-slate-900/50 border-white/10 shadow-black/30' : 'bg-white border-slate-200 shadow-slate-200/50'} opacity-100 translate-x-0 w-full lg:w-[280px] pointer-events-auto`}>
           <div className={`p-4 border-b font-bold text-sm flex items-center justify-between shrink-0 shadow-sm ${darkMode ? 'border-white/10 text-white bg-slate-900/70' : 'border-slate-200 text-slate-900 bg-white/80'}`}>
             <div className="flex items-center gap-2">
-              <MessageSquare size={16} className="text-emerald-500" /> 
-              <span>Live Chat</span>
+              <Flame size={16} className="text-emerald-500" /> 
+              <span>Popular Now</span>
             </div>
-            <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${darkMode ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' : 'text-emerald-600 bg-emerald-50 border border-emerald-200'}`}>Top Chat</span>
+            {popularMatches.length > 0 && (
+              <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${darkMode ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20' : 'text-emerald-600 bg-emerald-50 border border-emerald-200'}`}>
+                {popularMatches.length} {popularMatches.length === 1 ? 'Match' : 'Matches'}
+              </span>
+            )}
           </div>
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar min-h-0 pb-4">
-              {chatMessages.map(msg => (
-                <div key={msg.id} className={`flex gap-3 ${(msg as any).isMe ? 'flex-row-reverse' : ''} group animate-in fade-in duration-200`}>
-                  <div className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white shadow-md ring-2 ring-white/20 ${msg.avatarColor}`}>
-                    {msg.user[0]}
-                  </div>
-                  <div className={`flex flex-col ${(msg as any).isMe ? 'items-end' : 'items-start'}`}>
-                    <div className="flex items-baseline gap-2 mb-1.5">
-                      <span className={`text-xs font-bold ${darkMode ? 'text-slate-300' : 'text-slate-700'}`}>{msg.user}</span>
-                      <span className="text-[10px] text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">{msg.time}</span>
-                    </div>
-                    <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[85%] shadow-sm leading-relaxed transition-all ${(msg as any).isMe ? 'bg-emerald-600 text-white rounded-tr-sm hover:bg-emerald-500' : (darkMode ? 'bg-slate-800 text-slate-200 rounded-tl-sm hover:bg-slate-700' : 'bg-slate-100 text-slate-800 rounded-tl-sm hover:bg-slate-200')}`}>
-                      {msg.text}
-                    </div>
-                  </div>
+            <div className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0 pb-4">
+              {popularMatchesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner darkMode={darkMode} compact={true} />
                 </div>
-              ))}
-              <div ref={chatEndRef} />
+              ) : popularMatches.length > 0 ? (
+                <div className="space-y-4">
+                  {popularMatches.map(match => (
+                    <MatchCard key={match.id} match={match} compact={true} darkMode={darkMode} />
+                  ))}
+                </div>
+              ) : (
+                <div className={`flex flex-col items-center justify-center py-8 px-4 ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <Flame size={24} className="mb-2 opacity-50" />
+                  <p className="text-xs sm:text-sm text-center">No popular matches available</p>
+                </div>
+              )}
             </div>
-            <form onSubmit={handleSendMessage} className={`p-4 border-t flex items-center gap-2.5 shrink-0 ${darkMode ? 'border-white/15 bg-slate-900/70' : 'border-slate-200 bg-slate-50'}`}>
-              <input
-                type="text"
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                placeholder="Type a message..."
-                className={`flex-1 px-4 py-2.5 rounded-xl border text-sm outline-none transition-all focus:ring-2 focus:ring-emerald-500/30 shadow-sm ${darkMode ? 'bg-slate-900 border-white/15 text-white placeholder:text-slate-400 focus:border-emerald-500/40' : 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-500 focus:border-emerald-500'}`}
-              />
-              <button type="submit" className="flex items-center justify-center p-2.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 shadow-md hover:shadow-lg shadow-emerald-500/30 aspect-square">
-                <Send size={18} />
-              </button>
-            </form>
           </div>
         </div>
       </div>
@@ -1127,7 +1220,7 @@ export default function WatchPage() {
                 </div>
               ) : (
                 /* Video Player for Live/Ended Matches in Theater Mode */
-                <div className="w-full h-full max-h-full bg-black rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center relative">
+                <div className="w-full h-full max-h-full bg-black rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10 flex items-center justify-center relative group">
                   {streamsLoading ? (
                     <div className="w-full h-full flex items-center justify-center">
                       <LoadingSpinner darkMode={darkMode} compact={true} />
@@ -1161,6 +1254,90 @@ export default function WatchPage() {
                           setStreamSwitching(false);
                         }}
                       />
+                      {/* Available Streams Hover Overlay - Theater Mode */}
+                      {match.status !== 'upcoming' && streams.length > 0 && (
+                        <div className="absolute top-4 right-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="relative flex items-center gap-2" ref={theaterStreamMenuRef}>
+                            <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-slate-900'} backdrop-blur-md px-3 py-1.5 rounded ${darkMode ? 'bg-slate-900/80' : 'bg-white/80'}`}>
+                              Available streams
+                            </span>
+                            <button
+                              onClick={() => setIsTheaterStreamMenuOpen(!isTheaterStreamMenuOpen)}
+                              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all text-sm font-medium shadow-lg backdrop-blur-md ${
+                                darkMode
+                                  ? 'bg-slate-900/90 border-white/20 text-slate-200 hover:bg-slate-800/90 hover:border-emerald-500/40'
+                                  : 'bg-white/95 border-slate-200 text-slate-700 hover:bg-white hover:border-emerald-300'
+                              }`}
+                            >
+                              <Radio size={16} />
+                              <span>
+                                {streamSource ? ((streamSource as any).llmName || streamSource.source) : 'Loading...'}
+                              </span>
+                              <ChevronDown size={16} className={`transition-transform duration-200 ${isTheaterStreamMenuOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isTheaterStreamMenuOpen && (
+                              <>
+                                <div className="fixed inset-0 z-[60]" onClick={() => setIsTheaterStreamMenuOpen(false)} />
+                                <div className={`absolute right-0 mt-2 w-64 rounded-xl border shadow-2xl z-[70] overflow-hidden backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200 ${
+                                  darkMode
+                                    ? 'bg-slate-900/95 border-white/20'
+                                    : 'bg-white/95 border-slate-200'
+                                }`}>
+                                  <div className="p-2">
+                                    <div className={`px-3 py-2 mb-1 text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                                      Stream Quality
+                                    </div>
+                                    {streamsLoading ? (
+                                      <div className="flex items-center justify-center py-4">
+                                        <LoadingSpinner darkMode={darkMode} compact={true} />
+                                      </div>
+                                    ) : streams.length > 0 ? (
+                                      streams.map((stream) => {
+                                        const streamWithExtras = stream as APIStream & { uniqueId: string; llmName: string };
+                                        const streamUniqueId = streamWithExtras.uniqueId;
+                                        const currentUniqueId = streamSource ? (streamSource as any).uniqueId : null;
+                                        const isSelected = currentUniqueId === streamUniqueId;
+                                        
+                                        return (
+                                          <button
+                                            key={streamUniqueId}
+                                            onClick={() => {
+                                              setStreamSwitching(true);
+                                              setIframeLoaded(false);
+                                              setStreamSource(stream);
+                                              setIsTheaterStreamMenuOpen(false);
+                                            }}
+                                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium text-left ${
+                                              isSelected
+                                                ? (darkMode
+                                                    ? 'bg-emerald-500/30 border border-emerald-400/50 text-emerald-100 shadow-sm'
+                                                    : 'bg-emerald-50 border border-emerald-200 text-emerald-600 shadow-sm')
+                                                : (darkMode
+                                                    ? 'text-slate-300 hover:bg-white/5 hover:text-white'
+                                                    : 'text-slate-700 hover:bg-slate-50')
+                                            }`}
+                                          >
+                                            <Radio size={14} className={isSelected ? 'opacity-100' : 'opacity-50'} />
+                                            <span className="flex-1">
+                                              {streamWithExtras.llmName} - {stream.language} {stream.hd ? 'HD' : 'SD'}
+                                            </span>
+                                            {isSelected && <Check size={16} className={darkMode ? 'text-emerald-400' : 'text-emerald-500'} />}
+                                          </button>
+                                        );
+                                      })
+                                    ) : (
+                                      <div className={`px-3 py-4 text-center text-sm ${darkMode ? 'text-slate-400' : 'text-slate-500'}`}>
+                                        No streams available
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className={`w-full h-full flex items-center justify-center ${darkMode ? 'text-white' : 'text-slate-300'}`}>

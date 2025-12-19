@@ -1,10 +1,10 @@
 'use client';
 
-import { MOCK_MATCHES } from '@/app/data/constants';
 import { ReactNode, useState } from 'react';
 import { DarkModeProvider, useDarkMode } from '../contexts/DarkModeContext';
-import { SidebarProvider } from '../contexts/SidebarContext';
 import { LoadingProvider, useLoading } from '../contexts/LoadingContext';
+import { SidebarProvider } from '../contexts/SidebarContext';
+import { useAllMatches } from '../hooks/useAllMatches';
 import FeedbackModal from './FeedbackModal';
 import Header from './Header';
 import LoadingSpinner from './LoadingSpinner';
@@ -23,7 +23,9 @@ function LayoutContent({ children }: MainLayoutProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const liveCount = MOCK_MATCHES.filter(m => m.status === 'live').length;
+  // Fetch all matches for search
+  const { matches: allMatches } = useAllMatches();
+  const liveCount = allMatches.filter((m) => m.status === 'live').length;
 
   return (
     <div className={`min-h-screen w-full ${darkMode ? 'bg-slate-950' : 'bg-slate-100'} transition-colors duration-300 ${mobileMenuOpen ? 'mobile-sidebar-open' : ''}`}>
@@ -58,7 +60,7 @@ function LayoutContent({ children }: MainLayoutProps) {
         darkMode={darkMode}
         query={searchQuery}
         onQueryChange={setSearchQuery}
-        matches={MOCK_MATCHES}
+        matches={allMatches}
       />
 
       <FeedbackModal

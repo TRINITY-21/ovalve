@@ -1,10 +1,11 @@
 'use client';
 
 import { Clock, Radio, Search, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-import type { Match } from '@/app/data/constants';
+import type { Match } from '@/app/utils/matchTransform';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export default function SearchModal({
   matches
 }: SearchModalProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -73,7 +75,7 @@ export default function SearchModal({
 
   const filteredMatches = useMemo(() => {
     if (!query.trim()) {
-      return matches.slice(0, 12);
+      return matches; // Show all matches when no query
     }
 
     const lowerQuery = query.toLowerCase();
@@ -92,6 +94,11 @@ export default function SearchModal({
       return searchable.includes(lowerQuery);
     });
   }, [matches, query]);
+
+  const handleMatchClick = (matchId: string) => {
+    router.push(`/watch/${matchId}`);
+    onClose();
+  };
 
   if (!isOpen) {
     return null;
@@ -198,7 +205,7 @@ export default function SearchModal({
                         ? 'border-white/10 bg-white/5 hover:border-emerald-500/50 hover:bg-emerald-500/10'
                         : 'border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/60'
                     }`}
-                    onClick={onClose}
+                    onClick={() => handleMatchClick(match.id)}
                   >
                     <div className="h-10 w-10 md:h-14 md:w-14 shrink-0 rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-700 via-slate-500 to-slate-800 p-0.5 md:p-1">
                       <div className="flex h-full w-full items-center justify-center rounded-lg md:rounded-xl bg-white/10">
@@ -206,6 +213,9 @@ export default function SearchModal({
                           src={match.homeLogo || '/no-image.png'}
                           alt={`${match.home} logo`}
                           className={`h-7 w-7 md:h-10 md:w-10 rounded-lg md:rounded-xl ${match.homeLogo ? 'object-contain' : 'object-cover scale-150'}`}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/no-image.png';
+                          }}
                         />
                       </div>
                     </div>
